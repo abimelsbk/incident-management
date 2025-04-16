@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Incident Management</title>
+    <script defer src="/app.js"></script>
+    <style>
+      body { font-family: sans-serif; padding: 20px; }
+      input, textarea, button { display: block; margin: 10px 0; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <h1>Log Incident</h1>
+    <form id="ticketForm">
+      <input type="text" id="title" placeholder="Title" required />
+      <textarea id="desc" placeholder="Description" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+    <h2>All Tickets</h2>
+    <div id="tickets"></div>
+  </body>
+</html>
