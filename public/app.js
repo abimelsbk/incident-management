@@ -2,9 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebas
 import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
+  apiKey: "AIzaSyDVRV50Utqb0TGeBd0IviyfRRiEWkLXGpE",
+  authDomain: "incident-8c57f.firebaseapp.com",
+  projectId: "incident-8c57f",
+  storageBucket: "incident-8c57f.firebasestorage.app",
+  messagingSenderId: "472818277830",
+  appId: "1:472818277830:web:e4ad8b073a7f90716f66c7",
+  measurementId: "G-WL166Z3V50"
 };
 
 const app = initializeApp(firebaseConfig);
