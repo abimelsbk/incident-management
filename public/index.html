@@ -1,22 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Incident Management System</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-  <script src="app.js" defer></script>
-</head>
-<body>
-  <h1>Incident Ticket Logger</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Incident Management System</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 40px;
+        background: #f7f7f7;
+        color: #333;
+      }
+      h1 {
+        color: #e315de;
+      }
+      input, textarea {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button {
+        padding: 12px 20px;
+        background-color: #6a006f;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .incident {
+        background: #fff;
+        padding: 15px;
+        margin-top: 10px;
+        border-left: 5px solid #e315de;
+      }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCGsdDfXQmBgE18g9U-UUFUg2Zymwaw-Uk",
+        authDomain: "gatherem-mvp.firebaseapp.com",
+        projectId: "gatherem-mvp",
+        storageBucket: "gatherem-mvp.appspot.com",
+        messagingSenderId: "256429570772",
+        appId: "1:256429570772:web:ed3c02501b365830535941"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
 
-  <form id="ticketForm">
-    <input type="text" id="title" placeholder="Issue Title" required><br>
-    <textarea id="desc" placeholder="Describe the issue"></textarea><br>
-    <button type="submit">Log Ticket</button>
-  </form>
+      async function logIncident() {
+        const title = document.getElementById("title").value;
+        const desc = document.getElementById("desc").value;
 
-  <h2>Logged Incidents</h2>
-  <ul id="ticketList"></ul>
-</body>
+        if (!title || !desc) {
+          alert("Please enter both title and description");
+          return;
+        }
+
+        await db.collection("incidents").add({
+          title,
+          desc,
+          timestamp: new Date().toISOString(),
+          type: "manual"
+        });
+
+        document.getElementById("title").value = "";
+        document.getElementById("desc").value = "";
+      }
+
+      function loadIncidents() {
+        db.collection("incidents").orderBy("timestamp", "desc")
+          .onSnapshot(snapshot => {
+            const container = document.getElementById("incidentList");
+            container.innerHTML = "";
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const el = document.createElement("div");
+              el.className = "incident";
+              el.innerHTML = `
+                <strong>${data.title}</strong><br>
+                <small>${new Date(data.timestamp).toLocaleString()} [${data.type}]</small>
+                <p>${data.desc}</p>
+              `;
+              container.appendChild(el);
+            });
+          });
+      }
+
+      window.onload = loadIncidents;
+    </script>
+  </head>
+  <body>
+    <h1>Incident Ticket Logger</h1>
+    <input id="title" placeholder="Issue Title" />
+    <textarea id="desc" placeholder="Describe the issue"></textarea>
+    <button onclick="logIncident()">Log Ticket</button>
+
+    <h2>Logged Incidents</h2>
+    <div id="incidentList"></div>
+  </body>
 </html>

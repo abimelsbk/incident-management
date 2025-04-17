@@ -1,23 +1,22 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+const { onRequest } = require("firebase-functions/v2/https");
+const { initializeApp } = require("firebase-admin/app");
+const { getFirestore } = require("firebase-admin/firestore");
 
-admin.initializeApp();
-const db = admin.firestore();
+initializeApp();
+const db = getFirestore();
 
-exports.logGCPAlert = functions.https.onRequest(async (req, res) => {
+exports.autoLogIncident = onRequest(async (req, res) => {
   try {
-    const alertData = req.body;
+    const incident = {
+      title: req.body.incident?.summary || "GCP Alert",
+      description: req.body.incident?.condition?.name || "Auto-logged incident from GCP",
+      timestamp: new Date().toISOString(),
+    };
 
-    await db.collection('incidents').add({
-      title: alertData.incident || 'GCP Alert',
-      description: JSON.stringify(alertData),
-      createdAt: new Date(),
-      status: 'Auto-logged',
-    });
-
-    res.status(200).send('Alert logged successfully.');
-  } catch (error) {
-    console.error('Error logging alert:', error);
-    res.status(500).send('Error logging alert.');
+    await db.collection("incidents").add(incident);
+    res.status(200).send("Incident logged successfully");
+  } catch (err) {
+    console.error("Error logging incident:", err);
+    res.status(500).send("Failed to log incident");
   }
 });

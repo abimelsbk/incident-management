@@ -14,28 +14,42 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const form = document.getElementById('ticketForm');
-const ticketList = document.getElementById('ticketList');
+const form = document.getElementById('incidentForm');
+const titleInput = document.getElementById('title');
+const descInput = document.getElementById('description');
+const incidentList = document.getElementById('incidentList');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const title = document.getElementById('title').value;
-  const desc = document.getElementById('desc').value;
 
-  await db.collection('tickets').add({
-    title,
-    desc,
-    createdAt: new Date(),
-    status: 'Open',
-  });
+  const title = titleInput.value.trim();
+  const description = descInput.value.trim();
 
-  form.reset();
+  if (!title || !description) return;
+
+  try {
+    await db.collection("incidents").add({
+      title,
+      description,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "Open"
+    });
+
+    titleInput.value = "";
+    descInput.value = "";
+    alert("Ticket logged successfully!");
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    alert("Error logging ticket.");
+  }
 });
 
-db.collection('tickets').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-  ticketList.innerHTML = '';
+db.collection("incidents").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+  incidentList.innerHTML = '';
   snapshot.forEach(doc => {
     const data = doc.data();
-    ticketList.innerHTML += `<li><strong>${data.title}</strong>: ${data.desc} [${data.status}]</li>`;
+    const item = document.createElement('li');
+    item.innerHTML = `<strong>${data.title}</strong><br>${data.description}<br>Status: ${data.status}`;
+    incidentList.appendChild(item);
   });
 });
