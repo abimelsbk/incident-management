@@ -1,22 +1,28 @@
-const { onRequest } = require("firebase-functions/v2/https");
-const { initializeApp } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+admin.initializeApp();
 
-initializeApp();
-const db = getFirestore();
+// Function to log incidents triggered by GCP Monitoring alerts
+exports.logIncident = functions.https.onRequest((req, res) => {
+  const incidentData = req.body; // Assuming your GCP alert sends JSON data
 
-exports.autoLogIncident = onRequest(async (req, res) => {
-  try {
-    const incident = {
-      title: req.body.incident?.summary || "GCP Alert",
-      description: req.body.incident?.condition?.name || "Auto-logged incident from GCP",
-      timestamp: new Date().toISOString(),
-    };
-
-    await db.collection("incidents").add(incident);
-    res.status(200).send("Incident logged successfully");
-  } catch (err) {
-    console.error("Error logging incident:", err);
-    res.status(500).send("Failed to log incident");
-  }
+  // Extract relevant data from the GCP alert
+  const title = incidentData.incident.title || 'Unknown Title';
+  const description = incidentData.incident.description || 'No description provided';
+  const severity = incidentData.incident.severity || 'Unknown';
+  
+  // Log the incident to Firestore
+  admin.firestore().collection('incidents').add({
+    title: title,
+    description: description,
+    severity: severity,
+    status: 'open',
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  })
+  .then(docRef => {
+    res.status(200).send(`Incident logged with ID: ${docRef.id}`);
+  })
+  .catch((error) => {
+    res.status(500).send('Error logging incident: ' + error);
+  });
 });
