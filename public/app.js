@@ -48,8 +48,19 @@ db.collection("incidents").orderBy("createdAt", "desc").onSnapshot(snapshot => {
   incidentList.innerHTML = '';
   snapshot.forEach(doc => {
     const data = doc.data();
-    const item = document.createElement('li');
-    item.innerHTML = `<strong>${data.title}</strong><br>${data.description}<br>Status: ${data.status}`;
+
+    const createdAt = data.createdAt?.toDate().toLocaleString() || "Unknown";
+
+    const item = document.createElement('div');
+    item.classList.add('incident-card'); // Add CSS class
+
+    item.innerHTML = `
+      <h3>${data.title}</h3>
+      <p>${data.description}</p>
+      <p><strong>Status:</strong> ${data.status}</p>
+      <p><strong>Created At:</strong> ${createdAt}</p>
+    `;
+
     incidentList.appendChild(item);
   });
 });
