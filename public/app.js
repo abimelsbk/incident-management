@@ -1,5 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  serverTimestamp,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVRV50Utqb0TGeBd0IviyfRRiEWkLXGpE",
@@ -10,6 +18,9 @@ const firebaseConfig = {
   appId: "1:472818277830:web:e4ad8b073a7f90716f66c7",
   measurementId: "G-WL166Z3V50"
 };
+
+const incidentsContainer = document.getElementById("incidentsContainer");
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -35,7 +46,8 @@ form.addEventListener('submit', async (e) => {
       title,
       description,
       createdAt: serverTimestamp(),
-      status: "Open"
+      status: "Open",
+      source: "manual" // 👈 tag manual entries
     });
 
     titleInput.value = "";
@@ -47,22 +59,46 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// Real-time updates
-const q = query(collection(db, "incidents"), orderBy("createdAt", "desc"));
-onSnapshot(q, (snapshot) => {
-  incidentList.innerHTML = '';
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const createdAt = data.createdAt?.toDate().toLocaleString() || 'Just now';
+// // Real-time updates
+// const q = query(collection(db, "incidents"), orderBy("createdAt", "desc"));
+// onSnapshot(q, (snapshot) => {
+//   incidentList.innerHTML = '';
+//   snapshot.forEach(doc => {
+//     const data = doc.data();
+//     const createdAt = data.createdAt?.toDate().toLocaleString() || 'Just now';
+//     const sourceLabel = data.source === 'gcp' ? '[GCP]' : '[Manual]'; // 👈 display source
 
-    const item = document.createElement('div');
-    item.className = 'incident-card';
-    item.innerHTML = `
-      <h3>${data.title}</h3>
-      <p>${data.description}</p>
-      <p><strong>Status:</strong> ${data.status}</p>
-      <p><strong>Created At:</strong> ${createdAt}</p>
-    `;
-    incidentList.appendChild(item);
-  });
-});
+//     const item = document.createElement('div');
+//     item.className = 'incident-card';
+//     item.innerHTML = `
+//       <h3>${sourceLabel} ${data.title}</h3>
+//       <p>${data.description}</p>
+//       <p><strong>Status:</strong> ${data.status}</p>
+//       <p><strong>Created At:</strong> ${createdAt}</p>
+//     `;
+//     incidentList.appendChild(item);
+//   });
+// });
+
+// Firestore listener
+onSnapshot(
+  query(collection(db, "incidents"), orderBy("createdAt", "desc")),
+  (snapshot) => {
+    let html = "";
+    snapshot.forEach((doc) => {
+      const incident = doc.data();
+      const createdDate = incident.createdAt?.toDate().toLocaleString() || "Date not available";
+      const source = incident.source === "manual" ? "[manual]" : "[GCP]";
+
+      html += `
+        <div class="incident">
+          <h3>${incident.title}</h3>
+          <p>${createdDate} ${source}</p>
+          <p>${incident.description}</p>
+        </div>
+      `;
+    });
+    incidentsContainer.innerHTML = html; // assign once after loop
+  }
+);
+
