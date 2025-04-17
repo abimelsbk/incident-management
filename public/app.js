@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVRV50Utqb0TGeBd0IviyfRRiEWkLXGpE",
@@ -11,14 +11,17 @@ const firebaseConfig = {
   measurementId: "G-WL166Z3V50"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
+// DOM Elements
 const form = document.getElementById('incidentForm');
 const titleInput = document.getElementById('title');
 const descInput = document.getElementById('description');
 const incidentList = document.getElementById('incidentList');
 
+// Handle form submission
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -28,10 +31,10 @@ form.addEventListener('submit', async (e) => {
   if (!title || !description) return;
 
   try {
-    await db.collection("incidents").add({
+    await addDoc(collection(db, "incidents"), {
       title,
       description,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
       status: "Open"
     });
 
@@ -44,23 +47,22 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-db.collection("incidents").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+// Real-time updates
+const q = query(collection(db, "incidents"), orderBy("createdAt", "desc"));
+onSnapshot(q, (snapshot) => {
   incidentList.innerHTML = '';
   snapshot.forEach(doc => {
     const data = doc.data();
-
-    const createdAt = data.createdAt?.toDate().toLocaleString() || "Unknown";
+    const createdAt = data.createdAt?.toDate().toLocaleString() || 'Just now';
 
     const item = document.createElement('div');
-    item.classList.add('incident-card'); // Add CSS class
-
+    item.className = 'incident-card';
     item.innerHTML = `
       <h3>${data.title}</h3>
       <p>${data.description}</p>
       <p><strong>Status:</strong> ${data.status}</p>
       <p><strong>Created At:</strong> ${createdAt}</p>
     `;
-
     incidentList.appendChild(item);
   });
 });
