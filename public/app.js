@@ -11,37 +11,31 @@ const firebaseConfig = {
   measurementId: "G-WL166Z3V50"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const ticketForm = document.getElementById("ticketForm");
-const ticketsDiv = document.getElementById("tickets");
+const form = document.getElementById('ticketForm');
+const ticketList = document.getElementById('ticketList');
 
-ticketForm.addEventListener("submit", async (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const title = document.getElementById("title").value;
-  const desc = document.getElementById("desc").value;
+  const title = document.getElementById('title').value;
+  const desc = document.getElementById('desc').value;
 
-  await addDoc(collection(db, "tickets"), {
+  await db.collection('tickets').add({
     title,
-    description: desc,
-    status: "Open",
-    createdAt: serverTimestamp(),
-    troubleshootingSteps: [],
+    desc,
+    createdAt: new Date(),
+    status: 'Open',
   });
 
-  ticketForm.reset();
+  form.reset();
 });
 
-onSnapshot(collection(db, "tickets"), (snapshot) => {
-  ticketsDiv.innerHTML = "";
+db.collection('tickets').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+  ticketList.innerHTML = '';
   snapshot.forEach(doc => {
     const data = doc.data();
-    ticketsDiv.innerHTML += `
-      <div style="border:1px solid #aaa; padding:10px; margin:10px 0;">
-        <strong>${data.title}</strong><br>
-        ${data.description}<br>
-        <em>Status: ${data.status}</em>
-      </div>`;
+    ticketList.innerHTML += `<li><strong>${data.title}</strong>: ${data.desc} [${data.status}]</li>`;
   });
 });
